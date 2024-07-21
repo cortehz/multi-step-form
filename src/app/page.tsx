@@ -78,8 +78,6 @@ export default function Home() {
   const currentStep = form.watch('step');
   const currentStepName = STEPS_TO_STEP_NAMES[currentStep];
 
-  console.log(currentStepName, currentStep);
-
   return (
     // update the children of main to include the Form component
     <main className='flex min-h-screen flex-col items-center justify-between p-24'>
@@ -88,6 +86,7 @@ export default function Home() {
           onSubmit={form.handleSubmit(onSubmit)}
           className='flex flex-col gap-6 pt-6 w-full max-w-lg'
         >
+          <Steps />
           <FormControls />
           {steps[currentStepName]}
         </form>
@@ -304,5 +303,35 @@ function Availability() {
         )}
       />
     </div>
+  );
+}
+
+function Steps() {
+  const { getValues } = useFormContext();
+
+  // Get the current step from the form values
+  const step = getValues('step');
+
+  // Get the current step name
+  const currentStepName = STEPS_TO_STEP_NAMES[step];
+
+  return (
+    <ul className='flex gap-2'>
+      {Object.keys(steps).map((stepName, index) => {
+        const isCurrentStep = stepName === currentStepName;
+        return (
+          <li key={stepName} className='flex items-center gap-2'>
+            <span
+              className={`w-6 h-6 rounded-full flex items-center justify-center p-2 ${
+                isCurrentStep ? 'bg-blue-500' : 'bg-gray-200'
+              }`}
+            >
+              {isCurrentStep ? index + 1 : ''}
+            </span>
+            <span>{stepName}</span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
