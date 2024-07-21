@@ -1,113 +1,308 @@
-import Image from "next/image";
+'use client';
+
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm, useFormContext } from 'react-hook-form';
+import { z } from 'zod';
+
+const schema = z.object({
+  personalInfo: z.object({
+    firstName: z.string().min(1),
+    lastName: z.string(),
+    email: z.string().email(),
+  }),
+  jobDescription: z.object({
+    jobTitle: z.string().min(1),
+    jobDescription: z.string().optional(),
+    showJobDescription: z.boolean(),
+  }),
+  availability: z.object({
+    isAvailable: z.boolean(),
+  }),
+  step: z.number(),
+});
+
+// Define the type of the step names
+type StepNamesType = keyof Omit<z.infer<typeof schema>, 'step'>;
+
+// Define the steps, each step is a component
+const steps: { [key in StepNamesType]: React.ReactNode } = {
+  personalInfo: <PersonalInfo />,
+  jobDescription: <JobDescription />,
+  availability: <Availability />,
+};
+
+// Define a mapping from step number to step name
+const STEPS_TO_STEP_NAMES: { [key: number]: StepNamesType } = {
+  1: 'personalInfo',
+  2: 'jobDescription',
+  3: 'availability',
+};
 
 export default function Home() {
+  const form = useForm<z.infer<typeof schema>>({
+    defaultValues: {
+      personalInfo: {
+        firstName: '',
+        lastName: '',
+        email: '',
+      },
+      jobDescription: {
+        jobTitle: '',
+        jobDescription: '',
+        showJobDescription: false,
+      },
+      availability: {
+        isAvailable: false,
+      },
+      step: 1,
+    },
+    mode: 'onChange',
+    resolver: zodResolver(schema),
+  });
+
+  function onSubmit(data: z.infer<typeof schema>) {
+    alert(JSON.stringify(data, null, 2));
+  }
+
+  const currentStep = form.watch('step');
+  const currentStepName = STEPS_TO_STEP_NAMES[currentStep];
+
+  console.log(currentStepName, currentStep);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
+    // update the children of main to include the Form component
+    <main className='flex min-h-screen flex-col items-center justify-between p-24'>
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className='flex flex-col gap-6 pt-6 w-full max-w-lg'
         >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
+          <FormControls />
+          {steps[currentStepName]}
+        </form>
+      </Form>
     </main>
+  );
+}
+
+function FormControls() {
+  const { setValue, trigger, getFieldState, getValues } = useFormContext();
+
+  // Get the current step from the form values
+  const step = getValues('step');
+
+  // Get the current step name
+  const currentStepName = STEPS_TO_STEP_NAMES[step];
+
+  const isFirstStep = Object.keys(steps)[0] === currentStepName;
+  const isLastStep = step === Object.keys(steps).length;
+
+  return (
+    <div className='flex w-full gap-6 justify-between'>
+      <Button
+        variant='outline'
+        type='button'
+        disabled={isFirstStep}
+        onClick={() => setValue('step', step - 1)}
+        className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+      >
+        Previous
+      </Button>
+
+      {/* if it's not the last step
+      else submit the form (this will also trigger validation) */}
+      {isLastStep ? (
+        <Button variant='default' type='submit'>
+          Save
+        </Button>
+      ) : (
+        <Button
+          // Change the button type to submit when it's the last step
+          type='button'
+          onClick={async (e) => {
+            //prevents form submission from bubbling up to the submit button
+            // and triggering the form submission one step ahead
+            e.stopPropagation();
+            e.preventDefault();
+
+            //Trigger validation for the current step
+            // and if there are no errors, move to the next step
+            await trigger(currentStepName);
+            const currentStepHasErrors = getFieldState(currentStepName).error;
+            if (currentStepHasErrors) return;
+            setValue('step', step + 1);
+          }}
+          className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+        >
+          Next
+        </Button>
+      )}
+    </div>
+  );
+}
+
+function PersonalInfo() {
+  // Since we will use this inside the form,
+  // we can get acccess to the form context using useFormContext
+  const {
+    control,
+    formState: { errors },
+  } = useFormContext<z.infer<typeof schema>>();
+
+  return (
+    <div className='grid grid-cols-2 gap-2'>
+      {/* from the form control we can hook the inputs to the form via the name */}
+      <FormField
+        control={control}
+        name='personalInfo.firstName'
+        render={({ field }) => (
+          <FormItem className='col-span-1'>
+            <FormLabel>Firstname</FormLabel>
+            <FormControl>
+              <Input placeholder='Firstname' {...field} />
+            </FormControl>
+            {/* And access the formErrors and display them or not */}
+            {errors?.personalInfo?.firstName && (
+              <FormMessage title={errors.personalInfo.firstName.message} />
+            )}
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={control}
+        name='personalInfo.lastName'
+        render={({ field }) => (
+          <FormItem className='col-span-1'>
+            <FormLabel>Lastname</FormLabel>
+            <FormControl>
+              <Input placeholder='Lastname' {...field} />
+            </FormControl>
+            {errors?.personalInfo?.lastName && (
+              <FormMessage title={errors.personalInfo.lastName.message} />
+            )}
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={control}
+        name='personalInfo.email'
+        render={({ field }) => (
+          <FormItem className='col-span-2'>
+            <FormLabel>Email address</FormLabel>
+            <FormControl>
+              <Input placeholder='Email' {...field} />
+            </FormControl>
+            {errors?.personalInfo?.email && (
+              <FormMessage title={errors.personalInfo.email.message} />
+            )}
+          </FormItem>
+        )}
+      />
+    </div>
+  );
+}
+
+function JobDescription() {
+  const {
+    control,
+    formState: { errors },
+  } = useFormContext<z.infer<typeof schema>>();
+
+  return (
+    <div className='grid grid-cols-2 gap-2'>
+      <FormField
+        control={control}
+        name='jobDescription.jobTitle'
+        render={({ field }) => (
+          <FormItem className='col-span-2'>
+            <FormLabel>Job title</FormLabel>
+            <FormControl>
+              <Input placeholder='Job Title' {...field} />
+            </FormControl>
+            {errors?.jobDescription?.jobTitle && (
+              <FormMessage title={errors.jobDescription.jobTitle.message} />
+            )}
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={control}
+        name='jobDescription.jobDescription'
+        render={({ field }) => (
+          <FormItem className='col-span-2'>
+            <FormLabel>Job description</FormLabel>
+            <FormControl>
+              <Input placeholder='Job Description' {...field} />
+            </FormControl>
+            {errors?.jobDescription?.jobDescription && (
+              <FormMessage
+                title={errors.jobDescription.jobDescription.message}
+              />
+            )}
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={control}
+        name='jobDescription.showJobDescription'
+        render={({ field }) => (
+          <FormItem className='col-span-1'>
+            <FormControl>
+              <Checkbox
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            </FormControl>
+            <FormLabel className='ml-2'>Show description in profile?</FormLabel>
+            {errors?.jobDescription?.showJobDescription && (
+              <FormMessage
+                title={errors.jobDescription.showJobDescription.message}
+              />
+            )}
+          </FormItem>
+        )}
+      />
+    </div>
+  );
+}
+
+function Availability() {
+  const {
+    control,
+    formState: { errors },
+  } = useFormContext<z.infer<typeof schema>>();
+
+  return (
+    <div className='grid grid-cols-2 gap-2'>
+      <FormField
+        control={control}
+        name='availability.isAvailable'
+        render={({ field }) => (
+          <FormItem className='col-span-1'>
+            <FormControl>
+              <Checkbox
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            </FormControl>
+            <FormLabel className='ml-2'>Are you open to new jobs</FormLabel>
+            {errors?.availability?.isAvailable && (
+              <FormMessage title={errors.availability.isAvailable.message} />
+            )}
+          </FormItem>
+        )}
+      />
+    </div>
   );
 }
